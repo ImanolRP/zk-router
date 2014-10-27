@@ -1,4 +1,14 @@
-ZK Router
+Introduction
 =========
 
-A ZK router
+ZK-Router is a hash router for the ZK framework, intended to be used for Single Page Applications (SPAs). It enables a ZK SPA to have working BACK, FORWARD and RELOAD browser buttons and provides a simple navigation mechanism.
+
+Dependencies
+=========
+
+ZK-Router currently depends on the ZK Framework (CE is sufficient) and ZKSpring Security, which in turn depends on Spring Security.
+
+How it works
+=========
+
+Please, read [this blog post](http://blog.pastelstudios.com/2014/10/27/router-zk-framework/) to learn how the routing system works.
