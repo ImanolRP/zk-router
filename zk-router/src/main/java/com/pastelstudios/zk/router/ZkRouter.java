@@ -10,6 +10,8 @@ import org.zkoss.zk.ui.Execution;
 import org.zkoss.zk.ui.Executions;
 import org.zkoss.zk.ui.util.Clients;
 
+import com.pastelstudios.zk.router.plugin.ZkRouterPluginDelegator;
+
 public class ZkRouter {
 
 	private Map<String, ZkRoute> routesWithoutParams = new TreeMap<>();

@@ -1,10 +1,14 @@
-package com.pastelstudios.zk.router;
+package com.pastelstudios.zk.router.plugin;
 
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
 import org.zkoss.zk.ui.Component;
+
+import com.pastelstudios.zk.router.RouterException;
+import com.pastelstudios.zk.router.ZkRouter;
+import com.pastelstudios.zk.router.ZkRouterPlugin;
 
 public class ZkRouterPluginDelegator implements ZkRouterPlugin {
 
