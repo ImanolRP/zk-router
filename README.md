@@ -6,7 +6,12 @@ ZK-Router is a hash router for the ZK framework, intended to be used for Single 
 Dependencies
 =========
 
-ZK-Router currently depends on the ZK Framework (CE is sufficient) and ZKSpring Security, which in turn depends on Spring Security.
+ZK-Router currently depends on the ZK Framework (CE is sufficient).
+
+Security
+=========
+
+See the [zk-router-security plugin](https://github.com/l-atanasov/zk-router-security/).
 
 How it works
 =========
