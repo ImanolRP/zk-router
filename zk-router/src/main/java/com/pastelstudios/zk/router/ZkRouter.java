@@ -1,7 +1,6 @@
 package com.pastelstudios.zk.router;
 
 import java.util.HashMap;
-import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 import java.util.TreeMap;
@@ -15,21 +14,15 @@ public class ZkRouter {
 
 	private Map<String, ZkRoute> routesWithoutParams = new TreeMap<>();
 	private Map<String, ZkRoute> routesWithParams = new TreeMap<>();
-	private List<ZkRouteSecurityConstraint> securityConstraints = new LinkedList<>();
+	private ZkRouterPluginDelegator pluginDelegator = null;
 	private Component contentHolder = null;
 	private Component content = null;
 	private ZkRoutingErrorHandler routingErrorHandler = new NoOpRoutingErrorHandler();
 
-	public ZkRouter(Map<String, ZkRoute> routesWithoutParams, Map<String, ZkRoute> routesWithParams, List<ZkRouteSecurityConstraint> securityConstraints) {
+	public ZkRouter(Map<String, ZkRoute> routesWithoutParams, Map<String, ZkRoute> routesWithParams, List<ZkRouterPlugin> plugins) {
 		this.routesWithoutParams = routesWithoutParams;
 		this.routesWithParams = routesWithParams;
-		this.securityConstraints = securityConstraints;
-	}
-
-	private String removeFirstAndLastSlash(String url) {
-		url = url.replaceAll("^/", "");
-		url = url.replaceAll("/$", "");
-		return url;
+		this.pluginDelegator = new ZkRouterPluginDelegator(plugins);
 	}
 
 	public void setContentHolder(Component contentHolder) {
@@ -45,49 +38,37 @@ public class ZkRouter {
 	}
 
 	public void dispatch(String url) {
-		url = removeFirstAndLastSlash(url);
-		
-		ZkRouteSecurityConstraint securityConstraint = findSecurityConstraint(url);
-		if(securityConstraint != null && !securityConstraint.hasAccess()) {
+		url = RouterUtil.removeFirstAndLastSlash(url);
+		try {
+			tryDispatch(url);
+		} catch (RouterException e) {
 			if(routingErrorHandler != null) {
-				routingErrorHandler.handleAccessDenied(url);
+				routingErrorHandler.handleRoutingError(e);
 			}
-			return;
-		}
-		
-		ZkRoute route = findRoute(url);
-		if (route == null) {
-			if (routingErrorHandler != null) {
-				routingErrorHandler.handleMissingRoute(url);
-			}
-		} else {			
-			Map<String, Object> pathVariables = new HashMap<>();
-			try {
-				pathVariables = route.resolvePathVariables(url);
-			} catch (RuntimeException e) {
-				if(routingErrorHandler != null) {
-					routingErrorHandler.handleInvalidRoute(url, e);
-					return;
-				} else {
-					throw e;
-				}
-			}
-			
-			if (content != null) {
-				content.detach();
-				content = null;
-			}
-			content = Executions.createComponents(route.getView(), contentHolder, pathVariables);
 		}
 	}
 	
-	private ZkRouteSecurityConstraint findSecurityConstraint(String url) {
-		for(ZkRouteSecurityConstraint securityConstraint : securityConstraints) {
-			if(securityConstraint.matches(url)) {
-				return securityConstraint;
-			}
+	private void tryDispatch(String url) throws RouterException {
+		pluginDelegator.beforeRouting(this, content, url);
+		
+		ZkRoute route = findRoute(url);
+		if (route == null) {
+			throw new RouteMissingException();
+		}		
+		Map<String, Object> pathVariables = new HashMap<>();
+		try {
+			pathVariables = route.resolvePathVariables(url);
+		} catch (RuntimeException e) {
+			throw new InvalidRouteException(e);
 		}
-		return null;
+		
+		pluginDelegator.beforeContentChanged(this, content);
+		if (content != null) {
+			content.detach();
+			content = null;
+		}
+		content = Executions.createComponents(route.getView(), contentHolder, pathVariables);
+		pluginDelegator.afterContentChanged(this, content);
 	}
 
 	private ZkRoute findRoute(String url) {
@@ -111,6 +92,10 @@ public class ZkRouter {
 	public void goTo(String url) {
 		url = url.replaceAll("#", "");
 		Clients.evalJavaScript("window.location.hash = '#" + url + "';");
+	}
+	
+	public <T extends ZkRouterPlugin> T getPlugin(Class<T> pluginClass) {
+		return pluginDelegator.getPlugin(pluginClass);
 	}
 	
 	public static ZkRouter getCurrent() {

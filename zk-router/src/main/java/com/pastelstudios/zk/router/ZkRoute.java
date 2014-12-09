@@ -38,7 +38,7 @@ public class ZkRoute {
 	}
 
 	private void resolveUrlPattern(String url) {
-		String urlRegexp = url.replaceAll("\\{[a-zA-Z0-9:]+?\\}", "([^/\\]+)");
+		String urlRegexp = url.toLowerCase().replaceAll("\\{[a-zA-Z0-9:]+?\\}", "([^/\\]+)");
 		urlPattern = Pattern.compile(urlRegexp);
 
 		String varPatternRegexp = url.replaceAll("\\{[a-zA-Z0-9:]+?\\}", "\\\\{([a-zA-Z0-9:]+)\\\\}");

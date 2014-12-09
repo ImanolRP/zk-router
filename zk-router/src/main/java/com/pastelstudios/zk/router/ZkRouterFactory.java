@@ -12,11 +12,10 @@ public class ZkRouterFactory {
 
 	private Map<String, ZkRoute> routesWithoutParams = new TreeMap<>();
 	private Map<String, ZkRoute> routesWithParams = new TreeMap<>();
-	private List<ZkRouteSecurityConstraint> securityConstraints = new LinkedList<>();
 	private ZkRoutingErrorHandler defaultRoutingErrorHandler = new NoOpRoutingErrorHandler();
+	private List<ZkRouterPlugin> plugins = new LinkedList<>();
 	
 	public ZkRoute addRoute(String url, String view) {
-		url = url.toLowerCase();
 		url = removeFirstAndLastSlash(url);
 		ZkRoute route = new ZkRoute(url, view);
 		if (url.contains("{")) {
@@ -33,20 +32,15 @@ public class ZkRouterFactory {
 		return url;
 	}
 	
-	public void addSecurityConstraint(String path, String roles) {
-		path = removeFirstAndLastSlash(path);
-		securityConstraints.add(new ZkRouteSecurityConstraint(path, roles));
-	}
-	
 	public ZkRouter createRouter() {
-		ZkRouter router = new ZkRouter(routesWithoutParams, routesWithParams, securityConstraints);
+		ZkRouter router = new ZkRouter(routesWithoutParams, routesWithParams, plugins);
 		router.setRoutingErrorHandler(defaultRoutingErrorHandler);
 		Executions.getCurrent().getDesktop().setAttribute("router", router);
 		return router;
 	}
 	
 	public ZkRouter createRouter(Component contentHolder) {
-		ZkRouter router = new ZkRouter(routesWithoutParams, routesWithParams, securityConstraints);
+		ZkRouter router = new ZkRouter(routesWithoutParams, routesWithParams, plugins);
 		router.setContentHolder(contentHolder);
 		router.setRoutingErrorHandler(defaultRoutingErrorHandler);
 		Executions.getCurrent().getDesktop().setAttribute("router", router);
@@ -55,5 +49,17 @@ public class ZkRouterFactory {
 
 	public void setDefaultRoutingErrorHandler(ZkRoutingErrorHandler errorHandler) {
 		this.defaultRoutingErrorHandler = errorHandler;
+	}
+
+	public List<ZkRouterPlugin> getPlugins() {
+		return plugins;
+	}
+
+	public void setPlugins(List<ZkRouterPlugin> plugins) {
+		if(plugins == null) {
+			this.plugins = new LinkedList<>();
+		} else {
+			this.plugins = plugins;
+		}
 	}
 }
